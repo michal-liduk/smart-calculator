@@ -1,0 +1,165 @@
+class SmartCalculator:
+    def __init__(self):
+        self.count = 0
+        self.variable_dict = {}
+
+    def greetings(self, *integers):
+        while "/exit" not in integers:
+            integers = input().split()
+            self.count = 0
+            self.new_integers = []
+            self.another_integers = []
+            if integers == False:
+                continue
+            check = "".join(integers)
+            if "=" in check:
+                self.variable_assignment(check)
+                continue
+            elif check.count("(") != check.count(")"):
+                print("Invalid expression")
+                continue
+            if len(integers) == 1:
+                if integers[0].startswith("/"):
+                    if integers[0] == "/exit":
+                        break
+                    if integers[0] == "/help":
+                        print("The program calculates the sum of numbers and subtract numbers")
+                    else:
+                        print("Unknown command")
+                elif self.is_digit(integers[0]) == True:
+                    print(int(integers[0]))
+                elif integers[0] in self.variable_dict:
+                    print(self.variable_dict[integers[0]])
+                    continue 
+                elif "=" in integers[0]:
+                    assignment = "".join(integers)
+                    self.variable_assignment(assignment)
+                    continue
+                elif integers[0] not in self.variable_dict:
+                    print("Unknown variable")
+                    continue
+                elif self.is_digit(integers[0]) == False and integers[0] != "/exit":
+                    print("Invalid expression")
+            elif len(integers) > 1:
+                if self.variable_dict:
+                    for i in range(len(integers)):
+                        for key, value in self.variable_dict.items():
+                            if key == integers[i]:
+                                integers[i] = str(value)
+                try:
+                    self.operators(integers)
+                    self.final_integers = "".join(self.new_integers)
+                    self.operators_spaces(self.final_integers)
+                    self.final_integers = "".join(self.another_integers)
+                    final = self.postfix(self.final_integers.split(" "))
+                    self.count = int(self.new_integers[0])
+                    print(self.postfix_eval(final))
+                except ValueError:
+                        print("Invalid expression")
+        print("Bye!")
+        
+    def operators(self, integers):
+        for i in integers:
+            if i in ("+", "-", "*", "/", "^", "(", ")"):
+                self.new_integers.append(i)
+            elif i.count("-") == 0 and i.count("+") > 0:
+                self.new_integers.append("+")
+            elif i.count("-") > 0 and i.count("-") % 2 == 0:
+                self.new_integers.append("+")
+            elif i.count("-") > 1 and i.count("-") % 2 == 1:
+                self.new_integers.append("-")
+            elif i.count("*") > 1 or i.count("/"):
+                print("Invalid expression")
+            else:
+                self.new_integers.append(i)
+    def operators_spaces(self, integers):
+        for i in integers:
+            if i == "+":
+                self.another_integers.append(" + ")
+            elif i == "-":
+                self.another_integers.append(" - ")
+            elif i == "*":
+                self.another_integers.append(" * ")
+            elif i == "/":
+                self.another_integers.append(" / ")
+            elif i == "^":
+                self.another_integers.append(" ^ ")
+            elif i == "(":
+                self.another_integers.append("( ")
+            elif i == ")":
+                self.another_integers.append(" )")
+            else:
+                self.another_integers.append(i)
+
+    def is_digit(self, n):
+        try:
+            int(n) or float(n)
+            return True
+        except ValueError:
+            return False
+
+    def variable_assignment(self, string):
+        assignment = string.split("=")
+        if string.count("=") > 1:
+            print("Invalid assignment")
+        assignment = string.split("=")
+        if assignment[0].isalpha() == False:
+            print("Invalid identifier")
+        elif assignment[1] in self.variable_dict:
+            self.variable_dict[assignment[0]] = self.variable_dict[assignment[1]]
+        elif assignment[1].isdigit() == False:
+            print("Invalid assignment")
+        else:
+            self.variable_dict[assignment[0]] = int(assignment[1])
+
+    def postfix(self, integers):
+        result = []
+        stack = []
+        operators = {"+": 1, "-": 1, "*": 2, "/": 2, "^": 3, "(": 0}
+        for i in integers:
+            if self.is_digit(i) or i in self.variable_dict:
+                result.append(i)
+            elif i == "(":
+                stack.append(i)
+            elif i == ")":
+                top = stack.pop()
+                while top != '(':
+                  result.append(top)
+                  top = stack.pop()
+            else:
+                while stack and (operators[stack[-1]] >= operators[i]):
+                      result.append(stack.pop())
+                stack.append(i)
+        while stack:
+            result.append(stack.pop())
+        return " ".join(result)
+
+    def postfix_eval(self, postfix_expr):
+        operand_stack = []
+        token_list = postfix_expr.split()
+        for token in token_list:
+            if self.is_digit(token) or token in self.variable_dict:
+                operand_stack.append(token)
+            else:
+                operand2 = operand_stack.pop()
+                operand1 = operand_stack.pop()
+                result = self.do_math(token, operand1, operand2)
+                operand_stack.append(int(result))
+        return operand_stack.pop()
+
+    def do_math(self, op, op1, op2):
+        if op == "^":
+            return int(op1) ** int(op2)
+        elif op == "*":
+            return int(op1) * int(op2)
+        elif op == "/":
+            return int(op1) / int(op2)
+        elif op == "+":
+            return int(op1) + int(op2)
+        else:
+            return int(op1) - int(op2)
+
+        
+if __name__ == "__main__":
+    calculations = SmartCalculator()
+    calculations.greetings()
